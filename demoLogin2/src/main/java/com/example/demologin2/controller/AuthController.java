@@ -9,8 +9,11 @@ import com.example.demologin2.payload.response.JwtResponse;
 import com.example.demologin2.payload.response.MessageResponse;
 import com.example.demologin2.repository.RolesRespository;
 import com.example.demologin2.repository.StudentsRepository;
-import com.example.demologin2.security.jwt.JwtUtils;
+import com.example.demologin2.security.jwt.AuthEntryPointJwt;
+import com.example.demologin2.security.jwt.TokenProvider;
 import com.example.demologin2.security.service.StudentsDetailsImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -43,8 +46,9 @@ public class AuthController {
     PasswordEncoder encoder;
 
     @Autowired
-    JwtUtils jwtUtils;
+    TokenProvider tokenProvider;
 
+    Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -53,7 +57,7 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
+        String jwt = tokenProvider.createToken(authentication);
 
         StudentsDetailsImpl studentsDetails = (StudentsDetailsImpl) authentication.getPrincipal();
         List<String> roles = studentsDetails.getAuthorities().stream()
